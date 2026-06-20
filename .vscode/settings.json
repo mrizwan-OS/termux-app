@@ -1,0 +1,8 @@
+{
+    "java.import.gradle.annotationProcessing.enabled": true,
+    "java.import.gradle.home": "C:\\ProgramData\\chocolatey\\lib\\gradle",
+    "java.import.gradle.offline.enabled": true,
+    "java.import.gradle.version": "9.5.1",
+    "java.import.gradle.java.home": "C:\\Program Files\\Eclipse Adoptium\\jdk-17.0.19.10-hotspot",
+    "java.import.gradle.user.home": "C:\\Users\\rizwan\\.gradle"
+}
