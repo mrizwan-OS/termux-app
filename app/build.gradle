@@ -1,6 +1,5 @@
 plugins {
-<<<<<<< Updated upstream
-    id "com.android.application"
+    id 'com.android.application'
 }
 
 ext {
@@ -11,9 +10,6 @@ ext {
     // by replacing $PREFIX since app code is dependant on the variant used to build the APK.
     // Currently supported values are: [ "apt-android-7" "apt-android-5" ]
     packageVariant = (project.hasProperty('TERMUX_PACKAGE_VARIANT') ? project.TERMUX_PACKAGE_VARIANT : (System.getenv('TERMUX_PACKAGE_VARIANT') ?: 'apt-android-7')) // Default: "apt-android-7"
-=======
-    id 'com.android.application'
->>>>>>> Stashed changes
 }
 
 android {
@@ -21,12 +17,12 @@ android {
     compileSdkVersion 34
     
     defaultConfig {
-<<<<<<< Updated upstream
-        minSdkVersion project.properties.minSdkVersion.toInteger()
-        targetSdkVersion project.properties.targetSdkVersion.toInteger()
+        minSdkVersion 24
+        targetSdkVersion 34
         versionCode 119
         versionName "0.118.1-rc.1"
 
+        // Allow overriding version name from command line
         if (appVersionName) versionName = appVersionName
         validateVersionName(versionName)
 
@@ -41,20 +37,31 @@ android {
         manifestPlaceholders.TERMUX_TASKER_APP_NAME = "Termux:Tasker"
         manifestPlaceholders.TERMUX_WIDGET_APP_NAME = "Termux:Widget"
 
-=======
-        applicationId "com.termux"
-        minSdkVersion 24
-        targetSdkVersion 34
-        versionCode 1
-        versionName "1.0"
-        
-        ndkVersion "25.1.8937393"
-        
->>>>>>> Stashed changes
         externalNativeBuild {
             cmake {
                 cppFlags "-std=c++14"
                 arguments "-DANDROID_STL=c++_shared"
+            }
+        }
+        
+        // Add splits for different ABIs if needed
+        ndk {
+            abiFilters 'arm64-v8a', 'armeabi-v7a', 'x86_64'
+        }
+    }
+    
+    signingConfigs {
+        debug {
+            // Use debug keystore
+            storeFile file("debug.keystore")
+        }
+        release {
+            // For release builds, you should set these in gradle.properties or environment
+            if (project.hasProperty('RELEASE_STORE_FILE')) {
+                storeFile file(RELEASE_STORE_FILE)
+                storePassword RELEASE_STORE_PASSWORD
+                keyAlias RELEASE_KEY_ALIAS
+                keyPassword RELEASE_KEY_PASSWORD
             }
         }
     }
@@ -63,10 +70,15 @@ android {
         debug {
             minifyEnabled false
             debuggable true
+            signingConfig signingConfigs.debug
+            applicationIdSuffix ".debug"
+            versionNameSuffix "-debug"
         }
         release {
             minifyEnabled true
+            shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
         }
     }
     
@@ -75,17 +87,103 @@ android {
         targetCompatibility JavaVersion.VERSION_17
     }
     
+    // Configure packaging options
+    packagingOptions {
+        resources {
+            excludes += '/META-INF/{AL2.0,LGPL2.1}'
+        }
+    }
+    
+    // Enable build features
+    buildFeatures {
+        viewBinding true
+        dataBinding true
+    }
+    
     ndkVersion "25.1.8937393"
 }
 
+// Version validation function
+def validateVersionName(String versionName) {
+    // Add custom validation if needed
+    if (versionName == null || versionName.isEmpty()) {
+        throw new GradleException("Version name cannot be empty")
+    }
+    // Ensure version name follows semver
+    if (!versionName.matches('\\d+\\.\\d+(\\.\\d+)?(-[\\w.-]+)?')) {
+        // Log warning but don't fail build for custom names
+        logger.warn("Version name '$versionName' doesn't follow semver convention")
+    }
+}
+
+// Add custom task to display build info
+task printBuildInfo {
+    doLast {
+        println "========================================"
+        println "Termux Build Information"
+        println "========================================"
+        println "Version Code: ${android.defaultConfig.versionCode}"
+        println "Version Name: ${android.defaultConfig.versionName}"
+        println "Package Variant: ${project.ext.packageVariant}"
+        println "Min SDK: ${android.defaultConfig.minSdkVersion}"
+        println "Target SDK: ${android.defaultConfig.targetSdkVersion}"
+        println "Build Type: ${project.gradle.startParameter.taskNames}"
+        println "========================================"
+    }
+}
+
+// Ensure build info is printed before build
+preBuild.dependsOn printBuildInfo
+
 dependencies {
+    // AndroidX Core
     implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'androidx.core:core:1.12.0'
+    
+    // Material Design
     implementation 'com.google.android.material:material:1.11.0'
+    
+    // Layout
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
-    implementation 'androidx.preference:preference:1.2.1'
+    
+    // UI Components
     implementation 'androidx.recyclerview:recyclerview:1.3.2'
+    implementation 'androidx.cardview:cardview:1.0.0'
+    
+    // Preferences
+    implementation 'androidx.preference:preference:1.2.1'
+    
+    // Lifecycle
     implementation 'androidx.lifecycle:lifecycle-extensions:2.2.0'
+    implementation 'androidx.lifecycle:lifecycle-viewmodel:2.7.0'
+    implementation 'androidx.lifecycle:lifecycle-livedata:2.7.0'
+    
+    // Reactive Programming
     implementation 'io.reactivex.rxjava2:rxjava:2.2.21'
     implementation 'io.reactivex.rxjava2:rxandroid:2.1.1'
+    
+    // Networking
     implementation 'com.squareup.okhttp3:okhttp:4.12.0'
+    implementation 'com.squareup.okhttp3:logging-interceptor:4.12.0'
+    
+    // JSON Parsing
+    implementation 'com.google.code.gson:gson:2.10.1'
+    
+    // File Operations
+    implementation 'commons-io:commons-io:2.15.0'
+    
+    // Terminal Emulator Library
+    implementation project(':terminal-emulator')
+    implementation project(':terminal-view')
+    
+    // Termux Shared Library
+    implementation project(':termux-shared')
+    
+    // Testing
+    testImplementation 'junit:junit:4.13.2'
+    androidTestImplementation 'androidx.test:runner:1.5.2'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
 }
+
+// Enable incremental builds for faster development
+android.defaultConfig.vectorDrawables.useSupportLibrary = true
