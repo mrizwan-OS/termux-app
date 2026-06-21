@@ -35,12 +35,7 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Setup Android SDK
-          command: |
-            sudo apt-get update
-            sudo apt-get install -y openjdk-17-jdk
-      - run:
-          name: Build Debug APK
+          name: Build APK
           command: |
             chmod +x gradlew
             ./gradlew assembleDebug
@@ -55,11 +50,10 @@ jobs:
       - attach_workspace:
           at: .
       - run:
-          name: Create GitHub Release
+          name: Create Release
           command: |
             TAG=${CIRCLE_TAG:-latest}
-            RELEASE_NAME="Termux $TAG"
             gh release create "$TAG" \
               app/build/outputs/apk/debug/*.apk \
-              --title "$RELEASE_NAME" \
-              --notes "Automated release from CircleCI"
+              --title "Termux $TAG" \
+              --notes "Automated release"
