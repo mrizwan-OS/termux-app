@@ -8,25 +8,29 @@ param(
     [string]$Message = "Automated release from CircleCI"
 )
 
-# Validate version format
 if ($Version -notmatch '^v\d+\.\d+\.\d+$') {
     Write-Error "Version must be in format: v1.0.0"
     exit 1
 }
 
-Write-Host "Creating release $Version for termux-app..." -ForegroundColor Cyan
+Write-Host "🚀 Creating release $Version..." -ForegroundColor Cyan
 
-# Check if tag already exists
+# Delete existing tag if it exists
 $ExistingTag = git tag -l $Version
 if ($ExistingTag) {
-    Write-Error "Tag $Version already exists!"
-    exit 1
+    Write-Host "⚠️  Tag $Version exists. Deleting..." -ForegroundColor Yellow
+    git tag -d $Version
+    git push origin --delete $Version 2>$null
 }
 
-# Create and push tag
+# Create new tag
 git tag -a $Version -m $Message
 git push origin $Version
 
-Write-Host "`n✅ Release $Version created successfully!" -ForegroundColor Green
-Write-Host "CircleCI will now build and release the APKs." -ForegroundColor Yellow
-Write-Host "Monitor progress: https://app.circleci.com/pipelines/github/termux/termux-app" -ForegroundColor Cyan
+if ($LASTEXITCODE -eq 0) {
+    Write-Host "`n✅ Release $Version created successfully!" -ForegroundColor Green
+    Write-Host "📊 Monitor: https://app.circleci.com/pipelines/github/mrizwan-OS/termux-app" -ForegroundColor Yellow
+} else {
+    Write-Host "`n❌ Failed to create release!" -ForegroundColor Red
+    exit 1
+}
