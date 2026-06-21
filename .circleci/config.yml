@@ -1,0 +1,134 @@
+version: 2.1
+
+# ============================================
+# WORKFLOW: Daily build and test
+# Runs every morning at 06:00 UTC
+# ============================================
+workflows:
+  # Workflow for daily automated builds
+  daily_build:
+    triggers:
+      - schedule:
+          # Every day at 06:00 UTC
+          cron: "0 6 * * *"
+          filters:
+            branches:
+              only:
+                - main
+    jobs:
+      - build-and-test:
+          name: daily-build
+          context: termux-build
+
+  # Workflow for mandatory releases
+  # Triggered when a new release is required
+  release_workflow:
+    jobs:
+      - build-and-test:
+          name: release-build
+          context: termux-build
+          filters:
+            tags:
+              # Only run when a tag matching v* is pushed
+              only: /^v.*/
+      - create-release:
+          name: create-github-release
+          context: termux-build
+          requires:
+            - release-build
+          filters:
+            tags:
+              only: /^v.*/
+
+# ============================================
+# JOBS
+# ============================================
+jobs:
+  # Main build job for Termux Android app
+  build-and-test:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: arm.large  # ARM64 required for Termux builds 
+    environment:
+      ARCH: aarch64
+      TERMUX_APK_BUILD: "true"
+    steps:
+      - checkout
+
+      # Setup Android build environment
+      - run:
+          name: Setup Android SDK and NDK
+          command: |
+            sudo apt-get update
+            sudo apt-get install -y openjdk-17-jdk
+            echo "ANDROID_HOME=/opt/android-sdk" >> $BASH_ENV
+            echo "ANDROID_NDK=/opt/android-sdk/ndk/26.3.11579264" >> $BASH_ENV
+
+      # Grant execute permissions
+      - run:
+          name: Grant execute permission for gradlew
+          command: chmod +x gradlew
+
+      # Build debug APK
+      - run:
+          name: Build Debug APK
+          command: |
+            ./gradlew assembleDebug
+
+      # Run tests
+      - run:
+          name: Run tests
+          command: |
+            ./gradlew test
+
+      # Store APK artifacts
+      - store_artifacts:
+          path: app/build/outputs/apk/debug/
+          destination: apks/debug
+
+      # Store test results
+      - store_test_results:
+          path: app/build/test-results/
+
+      # Persist artifacts for release job
+      - persist_to_workspace:
+          root: .
+          paths:
+            - app/build/outputs/apk/debug/
+            - app/build/outputs/apk/release/
+
+  # Release job - creates GitHub Release with APKs
+  create-release:
+    machine:
+      image: ubuntu-2204:current
+    steps:
+      - attach_workspace:
+          at: .
+
+      # Install GitHub CLI
+      - run:
+          name: Install GitHub CLI
+          command: |
+            sudo apt-get update
+            sudo apt-get install -y gh
+
+      # Create GitHub Release
+      - run:
+          name: Create GitHub Release
+          command: |
+            TAG=${CIRCLE_TAG:-$(git describe --tags --abbrev=0)}
+            RELEASE_NAME="Termux $TAG"
+            
+            gh release create "$TAG" \
+              app/build/outputs/apk/debug/*.apk \
+              app/build/outputs/apk/release/*.apk \
+              --title "$RELEASE_NAME" \
+              --notes "Automated release from CircleCI" \
+              --repo "$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME"
+        environment:
+          GITHUB_TOKEN: GITHUB_TOKEN  # Set in CircleCI context
+
+      # Store release artifacts
+      - store_artifacts:
+          path: app/build/outputs/apk/
+          destination: apks
