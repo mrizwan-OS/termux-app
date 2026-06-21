@@ -96,6 +96,7 @@ android {
     
     // Enable build features
     buildFeatures {
+        buildConfig true
         viewBinding true
         dataBinding true
     }
