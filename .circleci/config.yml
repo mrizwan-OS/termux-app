@@ -29,7 +29,6 @@ workflows:
           context: termux-build
           filters:
             tags:
-              # Only run when a tag matching v* is pushed
               only: /^v.*/
       - create-release:
           name: create-github-release
@@ -48,7 +47,7 @@ jobs:
   build-and-test:
     machine:
       image: ubuntu-2204:current
-    resource_class: arm.large  # ARM64 required for Termux builds 
+    resource_class: arm.large
     environment:
       ARCH: aarch64
       TERMUX_APK_BUILD: "true"
@@ -101,6 +100,8 @@ jobs:
   create-release:
     machine:
       image: ubuntu-2204:current
+    environment:
+      GITHUB_TOKEN: GITHUB_TOKEN  # Moved environment here (job level)
     steps:
       - attach_workspace:
           at: .
@@ -125,8 +126,6 @@ jobs:
               --title "$RELEASE_NAME" \
               --notes "Automated release from CircleCI" \
               --repo "$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME"
-        environment:
-          GITHUB_TOKEN: GITHUB_TOKEN  # Set in CircleCI context
 
       # Store release artifacts
       - store_artifacts:
