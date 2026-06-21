@@ -100,8 +100,6 @@ jobs:
   create-release:
     machine:
       image: ubuntu-2204:current
-    environment:
-      GITHUB_TOKEN: GITHUB_TOKEN  # Moved environment here (job level)
     steps:
       - attach_workspace:
           at: .
