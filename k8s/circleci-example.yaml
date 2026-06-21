@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: termux-app
+  namespace: default
+  labels:
+    app: termux-app
+    # REQUIRED: CircleCI component labels
+    circleci.com/component-name: termux-app
+    circleci.com/version: v1.0.0
+  annotations:
+    # REQUIRED: CircleCI project ID annotation
+    circleci.com/project-id: YOUR_PROJECT_ID_HERE
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: termux-app
+  template:
+    metadata:
+      labels:
+        app: termux-app
+        # REQUIRED: CircleCI component labels on pods
+        circleci.com/component-name: termux-app
+        circleci.com/version: v1.0.0
+      annotations:
+        # Optional: Environment variable annotations
+        circleci.com/commit-sha: \
+        circleci.com/workflow-id: \
+    spec:
+      containers:
+      - name: termux-app
+        image: termux-app:latest
+        ports:
+        - containerPort: 8080

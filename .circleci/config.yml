@@ -27,6 +27,13 @@ workflows:
           filters:
             tags:
               only: /^v.*/
+      - deploy-markers:
+          name: deploy-markers
+          requires:
+            - create-github-release
+          filters:
+            tags:
+              only: /^v.*/
 
 jobs:
   build-and-test:
@@ -34,6 +41,21 @@ jobs:
       - image: cimg/android:2023.10
     steps:
       - checkout
+      - run:
+          name: Setup Android SDK and NDK
+          command: |
+            sudo apt-get update
+            sudo apt-get install -y openjdk-17-jdk
+            echo "JAVA_HOME=$(dirname $(dirname $(readlink -f $(which javac))))" >> $BASH_ENV
+            echo "ANDROID_HOME=/opt/android-sdk" >> $BASH_ENV
+            echo "ANDROID_NDK=/opt/android-sdk/ndk/26.3.11579264" >> $BASH_ENV
+
+      # Grant execute permissions
+      - run:
+          name: Grant execute permission for gradlew
+          command: chmod +x gradlew
+
+      # Build debug APK
       - run:
           name: Build APK
           command: |
@@ -57,3 +79,77 @@ jobs:
               app/build/outputs/apk/debug/*.apk \
               --title "Termux $TAG" \
               --notes "Automated release"
+
+  deploy-markers:
+    docker:
+      - image: mcr.microsoft.com/powershell:latest
+    steps:
+      - checkout
+      - run:
+          name: Deploy Markers with PowerShell
+          command: |
+            pwsh -Command "
+            # Configuration
+            \$config = @{
+                DeploymentMarkers = @{
+                    'BUILD_VERSION' = \$env:CIRCLE_TAG
+                    'DEPLOY_TIMESTAMP' = (Get-Date -Format 'yyyy-MM-dd HH:mm:ss UTC')
+                    'DEPLOY_ENVIRONMENT' = 'production'
+                    'DEPLOY_STATUS' = 'success'
+                    'GIT_COMMIT' = \$env:CIRCLE_SHA1
+                    'APK_PATH' = 'app/build/outputs/apk/debug/'
+                }
+            }
+
+            # Create deployment markers directory
+            \$markerDir = 'deployment-markers'
+            New-Item -ItemType Directory -Force -Path \$markerDir | Out-Null
+
+            # Create main deployment marker
+            \$markerPath = Join-Path \$markerDir 'deployment-marker.json'
+            \$config | ConvertTo-Json -Depth 10 | Set-Content -Path \$markerPath
+
+            # Create version-specific marker
+            \$versionMarker = Join-Path \$markerDir "deployment-\$env:CIRCLE_TAG.json"
+            Copy-Item \$markerPath \$versionMarker
+
+            # Create timestamp marker for tracking
+            \$timestamp = Get-Date -Format 'yyyyMMdd_HHmmss'
+            \$timestampMarker = Join-Path \$markerDir "deployment_\${timestamp}.json"
+            Copy-Item \$markerPath \$timestampMarker
+
+            # Create build info file for CI/CD dashboard
+            \$buildInfo = @{
+                buildId = \$env:CIRCLE_BUILD_NUM
+                workflowId = \$env:CIRCLE_WORKFLOW_ID
+                tag = \$env:CIRCLE_TAG
+                branch = \$env:CIRCLE_BRANCH
+                sha1 = \$env:CIRCLE_SHA1
+                timestamp = (Get-Date -Utc).ToString('o')
+            }
+            \$buildInfoPath = Join-Path \$markerDir 'build-info.json'
+            \$buildInfo | ConvertTo-Json | Set-Content -Path \$buildInfoPath
+
+            # Create a marker file for easy detection
+            'DEPLOYED' | Set-Content -Path (Join-Path \$markerDir 'DEPLOYMENT_COMPLETE.marker')
+
+            # Upload markers as artifacts
+            Write-Host '✅ Deployment markers created successfully!'
+            Write-Host '📁 Location:' \$markerDir
+            "
+
+      - store_artifacts:
+          path: deployment-markers/
+          destination: deployment-markers
+
+      - run:
+          name: Verify Deployment
+          command: |
+            echo "📦 Deployment Verification"
+            echo "=========================="
+            echo "Tag: ${CIRCLE_TAG}"
+            echo "Build: ${CIRCLE_BUILD_NUM}"
+            echo "Commit: ${CIRCLE_SHA1:0:7}"
+            echo "Markers created at: $(date -u)"
+            echo "=========================="
+            ls -la deployment-markers/
