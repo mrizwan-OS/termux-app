@@ -60,6 +60,7 @@ jobs:
           command: |
             sudo apt-get update
             sudo apt-get install -y openjdk-17-jdk
+            echo "JAVA_HOME=$(dirname $(dirname $(readlink -f $(which javac))))" >> $BASH_ENV
             echo "ANDROID_HOME=/opt/android-sdk" >> $BASH_ENV
             echo "ANDROID_NDK=/opt/android-sdk/ndk/26.3.11579264" >> $BASH_ENV
 
