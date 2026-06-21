@@ -113,13 +113,22 @@ jobs:
             sudo apt-get update
             sudo apt-get install -y gh
 
+      # Plan deployment
+      - run:
+          name: Plan deployment
+          command: |
+            circleci run release plan "${CIRCLE_JOB}" \
+              --environment-name="default" \
+              --component-name="${CIRCLE_PROJECT_REPONAME}" \
+              --target-version="${CIRCLE_TAG}"
+
       # Create GitHub Release
       - run:
           name: Create GitHub Release
           command: |
             TAG=${CIRCLE_TAG:-$(git describe --tags --abbrev=0)}
             RELEASE_NAME="Termux $TAG"
-            
+              
             gh release create "$TAG" \
               app/build/outputs/apk/debug/*.apk \
               app/build/outputs/apk/release/*.apk \
@@ -127,7 +136,22 @@ jobs:
               --notes "Automated release from CircleCI" \
               --repo "$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME"
 
+      # Update deployment status to running
+      - run:
+          name: Update deployment status to running
+          command: circleci run release update "${CIRCLE_JOB}" --status=RUNNING
+
       # Store release artifacts
       - store_artifacts:
           path: app/build/outputs/apk/
           destination: apks
+
+      # Update deployment status to success
+      - run:
+          name: Update deployment status to success
+          command: circleci run release update "${CIRCLE_JOB}" --status=SUCCESS
+          when: on_success
+      - run:
+          name: Update deployment status to failed
+          command: circleci run release update "${CIRCLE_JOB}" --status=FAILED
+          when: on_fail
