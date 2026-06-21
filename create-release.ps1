@@ -27,5 +27,6 @@ if ($ExistingTag) {
 git tag -a $Version -m $Message
 git push origin $Version
 
-Write-Host "Release $Version created successfully! CircleCI will now build and release." -ForegroundColor Green
-Write-Host "Monitor progress at: https://app.circleci.com/pipelines/github/mrizwan-OS/termux-app" -ForegroundColor Yellow
+Write-Host "`n✅ Release $Version created successfully!" -ForegroundColor Green
+Write-Host "CircleCI will now build and release the APKs." -ForegroundColor Yellow
+Write-Host "Monitor progress: https://app.circleci.com/pipelines/github/termux/termux-app" -ForegroundColor Cyan

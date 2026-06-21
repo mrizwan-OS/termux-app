@@ -14,7 +14,7 @@ workflows:
           filters:
             branches:
               only:
-                - main
+                - master
     jobs:
       - build-and-test:
           name: daily-build

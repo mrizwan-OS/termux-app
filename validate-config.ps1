@@ -15,8 +15,8 @@ if (-not $CircleCIExe) {
 circleci config validate .circleci/config.yml
 
 if ($LASTEXITCODE -eq 0) {
-    Write-Host "Configuration is valid!" -ForegroundColor Green
+    Write-Host "✅ Configuration is valid!" -ForegroundColor Green
 } else {
-    Write-Error "Configuration validation failed!"
+    Write-Error "❌ Configuration validation failed!"
     exit 1
 }
