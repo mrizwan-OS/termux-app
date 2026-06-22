@@ -50,6 +50,13 @@ jobs:
       - attach_workspace:
           at: .
       - run:
+          name: Plan deployment
+          command: |
+            circleci run release plan \
+              --environment-name=production \
+              --component-name=termux-app \
+              --target-version="${CIRCLE_TAG}"
+      - run:
           name: Create Release
           command: |
             TAG=${CIRCLE_TAG:-latest}
@@ -57,3 +64,11 @@ jobs:
               app/build/outputs/apk/debug/*.apk \
               --title "Termux $TAG" \
               --notes "Automated release"
+      - run:
+          name: Mark deployment success
+          command: circleci run release update --status=SUCCESS
+          when: on_success
+      - run:
+          name: Mark deployment failed
+          command: circleci run release update --status=FAILED
+          when: on_fail
