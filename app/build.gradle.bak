@@ -13,9 +13,6 @@ ext {
 }
 
 android {
-    buildFeatures {
-        buildConfig true
-    }
     namespace 'com.termux'
     compileSdkVersion 34
     
@@ -101,7 +98,6 @@ android {
     buildFeatures {
         viewBinding true
         dataBinding true
-        buildConfig true
     }
     
     ndkVersion "25.1.8937393"
