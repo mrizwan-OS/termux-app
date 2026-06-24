@@ -20,6 +20,8 @@ workflows:
           filters:
             tags:
               only: /^v.*/
+            branches:
+              ignore: /.*/
       - create-release:
           name: create-github-release
           requires:
@@ -27,6 +29,8 @@ workflows:
           filters:
             tags:
               only: /^v.*/
+            branches:
+              ignore: /.*/
 
 jobs:
   build-and-test:
