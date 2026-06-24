@@ -60,7 +60,7 @@ jobs:
             echo "export PATH=\$PATH:${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin:${ANDROID_SDK_ROOT}/platform-tools" >> $BASH_ENV
             source $BASH_ENV
 
-            yes | sdkmanager --sdk_root="${ANDROID_SDK_ROOT}" --licenses
+            yes | sdkmanager --sdk_root="${ANDROID_SDK_ROOT}" --licenses || true
             sdkmanager --sdk_root="${ANDROID_SDK_ROOT}" \
               "platforms;android-34" \
               "build-tools;34.0.0" \
