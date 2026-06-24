@@ -54,10 +54,6 @@ android {
     }
     
     signingConfigs {
-        debug {
-            // Use debug keystore
-            storeFile file("debug.keystore")
-        }
         release {
             // For release builds, you should set these in gradle.properties or environment
             if (project.hasProperty('RELEASE_STORE_FILE')) {
@@ -73,7 +69,6 @@ android {
         debug {
             minifyEnabled false
             debuggable true
-            signingConfig signingConfigs.debug
             applicationIdSuffix ".debug"
             versionNameSuffix "-debug"
         }
@@ -175,6 +170,9 @@ dependencies {
     
     // JSON Parsing
     implementation 'com.google.code.gson:gson:2.10.1'
+
+    // Guava (required because termux-shared exposes ImmutableBiMap in its public API)
+    implementation 'com.google.guava:guava:33.4.0-android'
     
     // File Operations
     implementation 'commons-io:commons-io:2.15.0'
@@ -185,6 +183,10 @@ dependencies {
     
     // Termux Shared Library
     implementation project(':termux-shared')
+
+    // Guava — needed because termux-shared exposes ImmutableBiMap in its public API
+    // (e.g. TermuxPropertyConstants.MAP_SESSION_SHORTCUTS) and uses `implementation` scope
+    implementation 'com.google.guava:guava:33.4.0-android'
     
     // Core library desugaring (required by :termux-shared)
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:1.1.5'
