@@ -65,6 +65,9 @@ jobs:
               --title "Termux $TAG" \
               --notes "Automated release"
       - run:
+          name: Update deployment status to running
+          command: circleci run release update "${CIRCLE_JOB}" --status=RUNNING
+      - run:
           name: Mark deployment success
           command: circleci run release update --status=SUCCESS
           when: on_success
