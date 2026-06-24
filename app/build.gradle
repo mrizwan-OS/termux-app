@@ -188,6 +188,10 @@ dependencies {
     
     // Termux Shared Library
     implementation project(':termux-shared')
+
+    // Guava — needed because termux-shared exposes ImmutableBiMap in its public API
+    // (e.g. TermuxPropertyConstants.MAP_SESSION_SHORTCUTS) and uses `implementation` scope
+    implementation 'com.google.guava:guava:33.4.0-android'
     
     // Core library desugaring (required by :termux-shared)
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:1.1.5'
