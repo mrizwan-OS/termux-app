@@ -1,24 +1,39 @@
-// Top-level build file where you can add configuration options common to all sub-projects/modules.
+plugins {
+    id 'java'
+    id 'application'
+}
 
-buildscript {
-    repositories {
-        google()
-        mavenCentral()
-    }
-    dependencies {
-        classpath 'com.android.tools.build:gradle:8.7.2'
+group = 'com.termux'
+version = '1.0.0'
+
+sourceCompatibility = '11'
+targetCompatibility = '11'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // Add your dependencies here
+    testImplementation 'junit:junit:4.13.2'
+    testImplementation 'org.mockito:mockito-core:5.2.0'
+}
+
+application {
+    mainClass = 'com.termux.Main'
+}
+
+test {
+    useJUnit()
+    testLogging {
+        events "passed", "skipped", "failed"
     }
 }
 
-allprojects {
-    repositories {
-        google()
-        mavenCentral()
-        maven { url 'https://jitpack.io' }
+jar {
+    manifest {
+        attributes(
+            'Main-Class': 'com.termux.Main'
+        )
     }
 }
-
-tasks.register('clean', Delete) {
-    delete rootProject.buildDir
-}
-
