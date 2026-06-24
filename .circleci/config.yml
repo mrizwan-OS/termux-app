@@ -34,22 +34,19 @@ jobs:
       image: ubuntu-2204:current
     resource_class: large
     environment:
-      ARCH: aarch64
+      ARCH: x86_64
       TERMUX_APK_BUILD: "true"
     steps:
       - checkout
 
-      # Setup Android build environment
       - run:
           name: Setup Android SDK and NDK
           command: |
             sudo apt-get update -q
             sudo apt-get install -y openjdk-17-jdk wget unzip
 
-            # Set JAVA_HOME
             echo "export JAVA_HOME=$(dirname $(dirname $(readlink -f $(which javac))))" >> $BASH_ENV
 
-            # Download and install Android command line tools
             ANDROID_SDK_ROOT="/home/circleci/android-sdk"
             mkdir -p "${ANDROID_SDK_ROOT}/cmdline-tools"
             wget -q "https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip" \
@@ -57,14 +54,12 @@ jobs:
             unzip -q /tmp/cmdline-tools.zip -d /tmp/android-cmdline
             mv /tmp/android-cmdline/cmdline-tools "${ANDROID_SDK_ROOT}/cmdline-tools/latest"
 
-            # Export environment variables persistently
             echo "export ANDROID_HOME=${ANDROID_SDK_ROOT}" >> $BASH_ENV
             echo "export ANDROID_SDK_ROOT=${ANDROID_SDK_ROOT}" >> $BASH_ENV
             echo "export ANDROID_NDK=${ANDROID_SDK_ROOT}/ndk/25.1.8937393" >> $BASH_ENV
             echo "export PATH=\$PATH:${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin:${ANDROID_SDK_ROOT}/platform-tools" >> $BASH_ENV
             source $BASH_ENV
 
-            # Accept licenses and install required SDK components
             yes | sdkmanager --sdk_root="${ANDROID_SDK_ROOT}" --licenses
             sdkmanager --sdk_root="${ANDROID_SDK_ROOT}" \
               "platforms;android-34" \
@@ -72,28 +67,25 @@ jobs:
               "platform-tools" \
               "ndk;25.1.8937393"
 
-            # Create local.properties so Gradle can always find the SDK
             echo "sdk.dir=${ANDROID_SDK_ROOT}" > local.properties
             echo "ndk.dir=${ANDROID_SDK_ROOT}/ndk/25.1.8937393" >> local.properties
 
-      # Grant execute permissions
       - run:
           name: Grant execute permission for gradlew
           command: chmod +x gradlew
 
-      # Build debug APK
-    docker:
-      - image: cimg/android:2023.10
-    steps:
-      - checkout
       - run:
           name: Build APK
-          command: |
-            chmod +x gradlew
-            ./gradlew assembleDebug
+          command: ./gradlew assembleDebug
+
       - store_artifacts:
           path: app/build/outputs/apk/debug/
           destination: apks/debug
+
+      - persist_to_workspace:
+          root: .
+          paths:
+            - app/build/outputs/apk/debug/
 
   create-release:
     docker:
