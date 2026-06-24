@@ -51,10 +51,6 @@ android {
     }
     
     signingConfigs {
-        debug {
-            // Use debug keystore
-            storeFile file("debug.keystore")
-        }
         release {
             // For release builds, you should set these in gradle.properties or environment
             if (project.hasProperty('RELEASE_STORE_FILE')) {
@@ -70,7 +66,6 @@ android {
         debug {
             minifyEnabled false
             debuggable true
-            signingConfig signingConfigs.debug
             applicationIdSuffix ".debug"
             versionNameSuffix "-debug"
         }
