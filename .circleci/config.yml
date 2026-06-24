@@ -68,10 +68,10 @@ jobs:
           name: Update deployment status to running
           command: circleci run release update "${CIRCLE_JOB}" --status=RUNNING
       - run:
-          name: Mark deployment success
-          command: circleci run release update --status=SUCCESS
+          name: Update deployment status to success
+          command: circleci run release update "${CIRCLE_JOB}" --status=SUCCESS
           when: on_success
       - run:
-          name: Mark deployment failed
-          command: circleci run release update --status=FAILED
+          name: Update deployment status to failed
+          command: circleci run release update "${CIRCLE_JOB}" --status=FAILED
           when: on_fail
