@@ -175,6 +175,9 @@ dependencies {
     
     // JSON Parsing
     implementation 'com.google.code.gson:gson:2.10.1'
+
+    // Guava (required because termux-shared exposes ImmutableBiMap in its public API)
+    implementation 'com.google.guava:guava:33.4.0-android'
     
     // File Operations
     implementation 'commons-io:commons-io:2.15.0'
