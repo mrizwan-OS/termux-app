@@ -12,13 +12,13 @@ cd C:\Users\rizwan\termux-app
 java -version
 
 # Check gradle wrapper
-./gradlew --version
+C:\Users\rizwan\termux-app\gradlew --version
 
 # Clean gradle cache
-./gradlew clean build --refresh-dependencies
+C:\Users\rizwan\termux-app\gradlew clean build --refresh-dependencies
 
 # Build with debug info
-./gradlew assembleDebug --debug
+C:\Users\rizwan\termux-app\gradlew assembleDebug --debug
 '''
 
 [cleanup]
@@ -27,22 +27,15 @@ script = ""
 [cleanup.win32]
 script = '''
 cd C:\Users\rizwan\termux-app
-./gradlew clean
+C:\Users\rizwan\termux-app\gradlew clean
 '''
 
 [[actions]]
-name = "./gradlew clean"
+name = "Build APK"
 icon = "run"
 command = '''
-# Check Java version
+cd C:\Users\rizwan\termux-app
 java -version
-
-# Check gradle wrapper
-./gradlew --version
-
-# Clean gradle cache
-./gradlew clean build --refresh-dependencies
-
-# Build with debug info
-./gradlew assembleDebug --debug
+C:\Users\rizwan\termux-app\gradlew clean build --refresh-dependencies
+C:\Users\rizwan\termux-app\gradlew assembleDebug --debug
 '''

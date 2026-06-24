@@ -2,21 +2,19 @@
 # Validate CircleCI configuration
 # ============================================
 
-Write-Host "Validating CircleCI configuration..." -ForegroundColor Cyan
+Write-Host "🔍 Validating CircleCI config..." -ForegroundColor Cyan
 
-# Check if CircleCI CLI is installed
-$CircleCIExe = Get-Command "circleci" -ErrorAction SilentlyContinue
-if (-not $CircleCIExe) {
-    Write-Error "CircleCI CLI not found. Please install: https://circleci.com/docs/local-cli/"
-    exit 1
+if (-not (Get-Command "circleci" -ErrorAction SilentlyContinue)) {
+    Write-Host "⚠️  CircleCI CLI not found. Skipping validation." -ForegroundColor Yellow
+    Write-Host "Install with: scoop install circleci" -ForegroundColor Yellow
+    exit 0
 }
 
-# Validate config
 circleci config validate .circleci/config.yml
 
 if ($LASTEXITCODE -eq 0) {
-    Write-Host "✅ Configuration is valid!" -ForegroundColor Green
+    Write-Host "`n✅ Configuration is valid!" -ForegroundColor Green
 } else {
-    Write-Error "❌ Configuration validation failed!"
+    Write-Host "`n❌ Configuration validation failed!" -ForegroundColor Red
     exit 1
 }

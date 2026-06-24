@@ -13,9 +13,6 @@ ext {
 }
 
 android {
-    buildFeatures {
-        buildConfig true
-    }
     namespace 'com.termux'
     compileSdkVersion 34
     
@@ -86,7 +83,6 @@ android {
     }
     
     compileOptions {
-        coreLibraryDesugaringEnabled true
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
     }
@@ -102,7 +98,6 @@ android {
     buildFeatures {
         viewBinding true
         dataBinding true
-        buildConfig true
     }
     
     ndkVersion "25.1.8937393"
@@ -141,8 +136,6 @@ task printBuildInfo {
 preBuild.dependsOn printBuildInfo
 
 dependencies {
-    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:1.1.5'
-
     // AndroidX Core
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'androidx.core:core:1.12.0'
@@ -175,9 +168,6 @@ dependencies {
     
     // JSON Parsing
     implementation 'com.google.code.gson:gson:2.10.1'
-
-    // Guava (required because termux-shared exposes ImmutableBiMap in its public API)
-    implementation 'com.google.guava:guava:33.4.0-android'
     
     // File Operations
     implementation 'commons-io:commons-io:2.15.0'
@@ -188,14 +178,7 @@ dependencies {
     
     // Termux Shared Library
     implementation project(':termux-shared')
-
-    // Guava — needed because termux-shared exposes ImmutableBiMap in its public API
-    // (e.g. TermuxPropertyConstants.MAP_SESSION_SHORTCUTS) and uses `implementation` scope
-    implementation 'com.google.guava:guava:33.4.0-android'
     
-    // Core library desugaring (required by :termux-shared)
-    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:1.1.5'
-
     // Testing
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test:runner:1.5.2'
