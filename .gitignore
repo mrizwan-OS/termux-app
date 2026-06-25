@@ -41,3 +41,61 @@ Thumbs.db
 # CircleCI local builds
 .circleci/local-build/
 .circleci/workspace/
+
+# IDE
+*.iws
+*.ipr
+.vscode/
+*.code-workspace
+
+# Android Studio
+.android/
+gradle/wrapper/gradle-wrapper.properties
+
+# Compiled Java
+*.class
+*.jar
+*.war
+*.aar
+*.ear
+
+# Test reports
+test-reports/
+coverage/
+
+# Log files
+*.log
+logs/
+
+# Dependencies
+libs/
+.m2/
+
+# Build artifacts
+dist/
+out/
+bin/
+
+# Misc
+*.tmp
+*.temp
+.project
+.classpath
+.factorypath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+
+# Local environment variables
+.env
+.env.local
+.env.*.local
+
+# Crash dumps
+hs_err_pid*.log
+
+# Node (if using any npm/yarn)
+node_modules/
+npm-debug.log
+yarn-error.log
