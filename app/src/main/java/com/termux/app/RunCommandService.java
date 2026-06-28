@@ -9,6 +9,8 @@ import android.os.Binder;
 import android.os.Build;
 import android.os.IBinder;
 
+import androidx.annotation.Nullable;
+
 import com.termux.R;
 import com.termux.shared.data.DataUtils;
 import com.termux.shared.data.IntentUtils;
@@ -37,12 +39,13 @@ public class RunCommandService extends Service {
 
     private static final String LOG_TAG = "RunCommandService";
 
-    class LocalBinder extends Binder {
+    public class LocalBinder extends Binder {
         public final RunCommandService service = RunCommandService.this;
     }
 
-    private final IBinder mBinder = new RunCommandService.LocalBinder();
+    private final IBinder mBinder = new LocalBinder();
 
+    @Nullable
     @Override
     public IBinder onBind(Intent intent) {
         return mBinder;
@@ -50,15 +53,19 @@ public class RunCommandService extends Service {
 
     @Override
     public void onCreate() {
+        super.onCreate();
         Logger.logVerbose(LOG_TAG, "onCreate");
         runStartForeground();
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        super.onStartCommand(intent, flags, startId);
         Logger.logDebug(LOG_TAG, "onStartCommand");
 
-        if (intent == null) return Service.START_NOT_STICKY;
+        if (intent == null) {
+            return Service.START_NOT_STICKY;
+        }
 
         // Run again in case service is already started and onCreate() is not called
         runStartForeground();
@@ -95,8 +102,9 @@ public class RunCommandService extends Service {
         boolean replaceCommaAlternativeCharsInArguments = intent.getBooleanExtra(RUN_COMMAND_SERVICE.EXTRA_REPLACE_COMMA_ALTERNATIVE_CHARS_IN_ARGUMENTS, false);
         if (replaceCommaAlternativeCharsInArguments) {
             String commaAlternativeCharsInArguments = IntentUtils.getStringExtraIfSet(intent, RUN_COMMAND_SERVICE.EXTRA_COMMA_ALTERNATIVE_CHARS_IN_ARGUMENTS, null);
-            if (commaAlternativeCharsInArguments == null)
+            if (commaAlternativeCharsInArguments == null) {
                 commaAlternativeCharsInArguments = TermuxConstants.COMMA_ALTERNATIVE;
+            }
             // Replace any commaAlternativeCharsInArguments characters with normal commas
             DataUtils.replaceSubStringsInStringArrayItems(executionCommand.arguments, commaAlternativeCharsInArguments, TermuxConstants.COMMA_NORMAL);
         }
@@ -144,11 +152,9 @@ public class RunCommandService extends Service {
             return stopService();
         }
 
-
-
         // If executable is null or empty, then exit here instead of getting canonical path which would expand to "/"
         if (executionCommand.executable == null || executionCommand.executable.isEmpty()) {
-            errmsg  = this.getString(R.string.error_run_command_service_mandatory_extra_missing, RUN_COMMAND_SERVICE.EXTRA_COMMAND_PATH);
+            errmsg = this.getString(R.string.error_run_command_service_mandatory_extra_missing, RUN_COMMAND_SERVICE.EXTRA_COMMAND_PATH);
             executionCommand.setStateFailed(Errno.ERRNO_FAILED.getCode(), errmsg);
             TermuxPluginUtils.processPluginExecutionCommandError(this, LOG_TAG, executionCommand, false);
             return stopService();
@@ -167,8 +173,6 @@ public class RunCommandService extends Service {
             TermuxPluginUtils.processPluginExecutionCommandError(this, LOG_TAG, executionCommand, false);
             return stopService();
         }
-
-
 
         // If workingDirectory is not null or empty
         if (executionCommand.workingDirectory != null && !executionCommand.workingDirectory.isEmpty()) {
@@ -209,7 +213,9 @@ public class RunCommandService extends Service {
         execIntent.setClass(this, TermuxService.class);
         execIntent.putExtra(TERMUX_SERVICE.EXTRA_ARGUMENTS, executionCommand.arguments);
         execIntent.putExtra(TERMUX_SERVICE.EXTRA_STDIN, executionCommand.stdin);
-        if (executionCommand.workingDirectory != null && !executionCommand.workingDirectory.isEmpty()) execIntent.putExtra(TERMUX_SERVICE.EXTRA_WORKDIR, executionCommand.workingDirectory);
+        if (executionCommand.workingDirectory != null && !executionCommand.workingDirectory.isEmpty()) {
+            execIntent.putExtra(TERMUX_SERVICE.EXTRA_WORKDIR, executionCommand.workingDirectory);
+        }
         execIntent.putExtra(TERMUX_SERVICE.EXTRA_RUNNER, executionCommand.runner);
         execIntent.putExtra(TERMUX_SERVICE.EXTRA_BACKGROUND_CUSTOM_LOG_LEVEL, DataUtils.getStringFromInteger(executionCommand.backgroundCustomLogLevel, null));
         execIntent.putExtra(TERMUX_SERVICE.EXTRA_SESSION_ACTION, executionCommand.sessionAction);
@@ -259,11 +265,13 @@ public class RunCommandService extends Service {
 
     private Notification buildNotification() {
         // Build the notification
-        Notification.Builder builder =  NotificationUtils.geNotificationBuilder(this,
+        Notification.Builder builder = NotificationUtils.getNotificationBuilder(this,
             TermuxConstants.TERMUX_RUN_COMMAND_NOTIFICATION_CHANNEL_ID, Notification.PRIORITY_LOW,
             TermuxConstants.TERMUX_RUN_COMMAND_NOTIFICATION_CHANNEL_NAME, null, null,
             null, null, NotificationUtils.NOTIFICATION_MODE_SILENT);
-        if (builder == null)  return null;
+        if (builder == null) {
+            return null;
+        }
 
         // No need to show a timestamp:
         builder.setShowWhen(false);
@@ -278,10 +286,11 @@ public class RunCommandService extends Service {
     }
 
     private void setupNotificationChannel() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return;
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+            return;
+        }
 
         NotificationUtils.setupNotificationChannel(this, TermuxConstants.TERMUX_RUN_COMMAND_NOTIFICATION_CHANNEL_ID,
             TermuxConstants.TERMUX_RUN_COMMAND_NOTIFICATION_CHANNEL_NAME, NotificationManager.IMPORTANCE_LOW);
     }
-
 }
