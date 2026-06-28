@@ -1,11 +1,16 @@
 {
     "recommendations": [
-        "vscjava.vscode-java-pack",
-        "github.vscode-pull-request-github",
-        "eamodio.gitlens",
-        "ms-kubernetes-tools.vscode-kubernetes-tools",
         "davidanson.vscode-markdownlint",
-        "amazonwebservices.aws-toolkit-vscode",
-        "ms-vscode.makefile-tools"
+        "dbaeumer.vscode-eslint",
+        "eamodio.gitlens",
+        "github.vscode-pull-request-github",
+        "ms-python.python",
+        "ms-vscode-remote.remote-containers",
+        "naco-siren.gradle-language",
+        "redhat.java",
+        "vscjava.vscode-gradle",
+        "vscjava.vscode-java-pack",
+        "vscode-icons-team.vscode-icons",
+        "ms-vscode.cpptools-extension-pack"
     ]
 }
