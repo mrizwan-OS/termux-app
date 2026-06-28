@@ -5,6 +5,7 @@
         "eamodio.gitlens",
         "ms-kubernetes-tools.vscode-kubernetes-tools",
         "davidanson.vscode-markdownlint",
-        "amazonwebservices.aws-toolkit-vscode"
+        "amazonwebservices.aws-toolkit-vscode",
+        "ms-vscode.makefile-tools"
     ]
 }
