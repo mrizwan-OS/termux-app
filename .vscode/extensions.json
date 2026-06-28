@@ -3,6 +3,7 @@
         "vscjava.vscode-java-pack",
         "github.vscode-pull-request-github",
         "eamodio.gitlens",
-        "ms-kubernetes-tools.vscode-kubernetes-tools"
+        "ms-kubernetes-tools.vscode-kubernetes-tools",
+        "davidanson.vscode-markdownlint"
     ]
 }
