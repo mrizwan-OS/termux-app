@@ -4,6 +4,7 @@
         "github.vscode-pull-request-github",
         "eamodio.gitlens",
         "ms-kubernetes-tools.vscode-kubernetes-tools",
-        "davidanson.vscode-markdownlint"
+        "davidanson.vscode-markdownlint",
+        "amazonwebservices.aws-toolkit-vscode"
     ]
 }
