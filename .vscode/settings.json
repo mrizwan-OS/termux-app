@@ -4,5 +4,10 @@
     "java.import.gradle.offline.enabled": true,
     "java.import.gradle.version": "9.5.1",
     "java.import.gradle.java.home": "C:\\Program Files\\Eclipse Adoptium\\jdk-17.0.19.10-hotspot",
-    "java.import.gradle.user.home": "C:\\Users\\rizwan\\.gradle"
+    "java.import.gradle.user.home": "C:\\Users\\rizwan\\.gradle",
+    "python.testing.pytestArgs": [
+        "."
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true
 }
