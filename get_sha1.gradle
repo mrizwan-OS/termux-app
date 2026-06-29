@@ -1,0 +1,28 @@
+task getSha1 {
+    doLast {
+        def debugKeystore = System.getProperty("user.home") + "/.android/debug.keystore"
+        def keystoreFile = file(debugKeystore)
+        if (!keystoreFile.exists()) {
+            println "Debug keystore not found at: " + debugKeystore
+            println "Creating debug keystore..."
+            exec {
+                commandLine 'keytool', '-genkey', '-v', '-keystore', debugKeystore,
+                    '-alias', 'androiddebugkey', '-keyalg', 'RSA', '-keysize', '2048',
+                    '-validity', '10000', '-storepass', 'android', '-keypass', 'android',
+                    '-dname', 'CN=Android Debug, O=Android, C=US'
+            }
+        }
+        
+        def cmd = "keytool -list -v -keystore \"\" -alias androiddebugkey -storepass android -keypass android"
+        def process = cmd.execute()
+        process.waitFor()
+        def output = process.in.text
+        
+        def sha1 = (output =~ /SHA1: ([0-9A-F:]+)/)
+        if (sha1.find()) {
+            println "SHA1: " + sha1.group(1)
+        } else {
+            println "Could not find SHA1 in output"
+        }
+    }
+}

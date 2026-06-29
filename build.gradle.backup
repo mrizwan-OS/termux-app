@@ -1,11 +1,20 @@
 /*
  * Termux Application - Java Application Build Script
+ * This is a Java application, NOT an Android app
  */
 
+// ============================================
+// PLUGINS
+// ============================================
 plugins {
+    // Java application plugin
     id 'application'
+    
+    // Checkstyle for code quality
     id 'checkstyle'
-    id 'java'
+    
+    // Shadow plugin for fat JAR (optional but recommended)
+    id 'com.github.johnrengelman.shadow' version '8.1.1' apply false
 }
 
 // ============================================
@@ -13,7 +22,7 @@ plugins {
 // ============================================
 group = 'com.termux'
 version = '1.0.0-SNAPSHOT'
-description = 'Termux Application'
+description = 'Termux Application - Android terminal emulator and Linux environment'
 
 // ============================================
 // JAVA COMPATIBILITY
@@ -29,6 +38,12 @@ java {
 application {
     mainClass = 'com.termux.Main'
     applicationName = 'termux-app'
+    
+    applicationDefaultJvmArgs = [
+        '-Xms256m',
+        '-Xmx1024m',
+        '-Dfile.encoding=UTF-8'
+    ]
 }
 
 // ============================================
@@ -36,7 +51,7 @@ application {
 // ============================================
 repositories {
     mavenCentral()
-    google()
+    google()  // For Firebase dependencies
     maven {
         url 'https://jitpack.io'
     }
@@ -46,30 +61,42 @@ repositories {
 // DEPENDENCIES
 // ============================================
 dependencies {
-    // ===== FIREBASE (Java/Server SDK - NOT Android) =====
+    // ===== FIREBASE (Java SDK, not Android SDK) =====
+    // Firebase Admin SDK for server-side Java applications
     implementation 'com.google.firebase:firebase-admin:9.2.0'
+    
+    // Firebase Authentication
+    implementation 'com.google.firebase:firebase-auth:22.3.0'
+    
+    // Firebase Cloud Firestore
+    implementation 'com.google.cloud:google-cloud-firestore:3.13.2'
+    
+    // Google Cloud Storage (if needed)
+    implementation 'com.google.cloud:google-cloud-storage:2.30.0'
     
     // ===== CORE Dependencies =====
     implementation 'com.google.code.findbugs:jsr305:3.0.2'
     implementation 'org.apache.commons:commons-lang3:3.14.0'
-    
-    // FIXED: Use older Guava version that's compatible with checkstyle
-    implementation 'com.google.guava:guava:31.1-jre'
+    implementation 'com.google.guava:guava:33.0.0-jre'
     
     // ===== LOGGING =====
     implementation 'org.slf4j:slf4j-api:2.0.11'
     implementation 'org.slf4j:slf4j-simple:2.0.11'
     
-    // ===== JSON =====
+    // ===== JSON PROCESSING =====
     implementation 'com.google.code.gson:gson:2.10.1'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.16.1'
     
-    // ===== HTTP Client =====
+    // ===== HTTP CLIENT =====
     implementation 'com.squareup.okhttp3:okhttp:4.12.0'
     
-    // ===== TEST =====
+    // ===== TEST Dependencies =====
     testImplementation 'junit:junit:4.13.2'
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.2'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.2'
+    testRuntimeOnly 'org.junit.vintage:junit-vintage-engine:5.10.2'
+    testImplementation 'org.mockito:mockito-core:5.10.0'
+    testImplementation 'org.assertj:assertj-core:3.25.3'
 }
 
 // ============================================
@@ -77,64 +104,56 @@ dependencies {
 // ============================================
 test {
     useJUnitPlatform()
+    
     testLogging {
         events = ['passed', 'skipped', 'failed']
+        showExceptions = true
+        showStackTraces = true
+        showCauses = true
+        exceptionFormat = 'full'
+    }
+    
+    maxHeapSize = '512m'
+    
+    reports {
+        html.required = true
+        junitXml.required = true
     }
 }
 
 // ============================================
 // JAR CONFIGURATION
 // ============================================
-tasks.named('jar') {
+jar {
     manifest {
         attributes(
             'Implementation-Title': project.name,
             'Implementation-Version': project.version,
-            'Main-Class': application.mainClass
-        )
-    }
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-}
-
-// ============================================
-// FIXED FAT JAR (with signature exclusion)
-// ============================================
-tasks.register('fatJar', Jar) {
-    dependsOn tasks.named('jar')
-    archiveClassifier = 'all'
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    
-    manifest {
-        attributes(
+            'Implementation-Vendor': 'Termux Community',
             'Main-Class': application.mainClass,
-            'Implementation-Title': project.name,
-            'Implementation-Version': project.version
+            'Build-Timestamp': new Date().format('yyyy-MM-dd HH:mm:ss'),
+            'Build-Jdk': System.properties['java.version']
         )
     }
     
-    from {
-        configurations.runtimeClasspath.collect { 
-            it.isDirectory() ? it : zipTree(it) 
-        }
-    }
-    
-    // FIXED: Exclude signature files to avoid SecurityException
     exclude 'META-INF/*.SF'
     exclude 'META-INF/*.DSA'
     exclude 'META-INF/*.RSA'
-    exclude 'META-INF/*.MF'
-    
-    with jar
 }
 
 // ============================================
-// FIXED CHECKSTYLE (use compatible version)
+// CHECKSTYLE CONFIGURATION (FIXED)
 // ============================================
 checkstyle {
-    toolVersion = '9.3'  // Older version that works with Guava 31.1
+    toolVersion = '10.12.7'
     showViolations = true
     maxErrors = 100
+    
+    // FIXED: Removed the problematic 'exclude' line
+    // Configuration file
     configFile = file("${rootDir}/config/checkstyle/checkstyle.xml")
+    
+    // Only create if it doesn't exist
     if (!configFile.exists()) {
         configFile.parentFile.mkdirs()
         configFile.text = """<?xml version="1.0"?>
@@ -164,47 +183,35 @@ checkstyle {
 // TASKS
 // ============================================
 tasks.register('setupFirebase') {
-    description = 'Setup Firebase configuration'
+    description = 'Sets up Firebase configuration'
     group = 'firebase'
+    
     doLast {
         println """
 ╔══════════════════════════════════════════════════════════╗
-║  🔥 FIREBASE SETUP                                      ║
+║  🔥 FIREBASE SETUP FOR JAVA APPLICATION                 ║
 ║                                                          ║
-║  1. Go to Firebase Console:                             ║
-║     https://console.firebase.google.com/                ║
+║  This is a Java application, not an Android app.        ║
+║  Firebase integration requires the Admin SDK.          ║
 ║                                                          ║
-║  2. Project Settings -> Service Accounts                ║
-║                                                          ║
-║  3. Generate New Private Key (JSON)                     ║
-║                                                          ║
-║  4. Place the file in:                                  ║
-║     src/main/resources/service-account-key.json         ║
-║                                                          ║
-║  5. Or set environment variable:                        ║
+║  Steps:                                                 ║
+║  1. Go to Firebase Console                              ║
+║  2. Create a Service Account:                           ║
+║     Project Settings -> Service Accounts                ║
+║  3. Generate a new private key (JSON)                   ║
+║  4. Place the JSON file in: src/main/resources/        ║
+║  5. Set environment variable:                           ║
 ║     GOOGLE_APPLICATION_CREDENTIALS=path/to/key.json    ║
+║                                                          ║
+║  For more info:                                         ║
+║  https://firebase.google.com/docs/admin/setup          ║
 ╚══════════════════════════════════════════════════════════╝
 """
     }
 }
 
 // ============================================
-// QUICK RUN TASK (without checkstyle)
-// ============================================
-tasks.register('quickRun') {
-    dependsOn classes
-    doLast {
-        javaexec {
-            mainClass = application.mainClass
-            classpath = sourceSets.main.runtimeClasspath
-        }
-    }
-    description = 'Runs the application without running checkstyle'
-    group = 'application'
-}
-
-// ============================================
-// WRAPPER
+// WRAPPER CONFIGURATION
 // ============================================
 wrapper {
     distributionType = Wrapper.DistributionType.ALL
@@ -212,10 +219,13 @@ wrapper {
 }
 
 // ============================================
-// DEFAULT
+// DEFAULT TASKS
 // ============================================
 defaultTasks 'clean', 'build'
 
+// ============================================
+// PROJECT INFO
+// ============================================
 println """
 Building ${project.name} v${project.version}
 Java: ${JavaVersion.current()}
