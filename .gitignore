@@ -99,3 +99,7 @@ hs_err_pid*.log
 node_modules/
 npm-debug.log
 yarn-error.log
+*.backup
+*.tmp
+*.log
+get_sha1.gradle
